@@ -1,66 +1,76 @@
 package main
 
 import (
+	_ "embed"
 	"fmt"
 	"time"
 )
 
-var digits [8]int
-var fonts [11]uint32 = [11]uint32{31599, 19812, 14479, 31207, 23524, 29411, 29679, 30866, 31727, 31719, 1040}
+//go:embed qlock-formatted.txt
+var s string
 
-func pixel(ch byte, x int, y int, digits [8]int) {
-	i := x / 5
-	dx := x % 5
-	if i < 8 && y < 5 && dx < 3 && ((fonts[digits[i]]>>((5-y-1)*3+dx))&1) != 0 {
-		fmt.Printf("\033[1;31m%c\033[0m", ch)
+var x, y, i, dx int
+var f = []int{31599, 19812, 14479, 31207, 23524, 29411, 29679, 30866, 31727, 31719, 1040}
+var d [8]int
+
+func p(ch byte) {
+	i = x / 2 / (3 + 2)
+	dx = x / 2 % (3 + 2)
+	if i < 8 && (y-4)/2 < 5 && dx < 3 && (f[d[i]]>>((5-(y-4)/2-1)*3+dx))&1 == 1 {
+		fmt.Printf("\033[1;41;30m%c\033[0m", ch)
 	} else {
 		fmt.Printf("%c", ch)
 	}
+	if ch == '\n' {
+		y += 1
+		x = 0
+	} else {
+		x += 1
+	}
+}
+
+func gd() {
+	t := time.Now()
+	d[0] = t.Hour() / 10
+	d[1] = t.Hour() % 10
+	d[2] = 10
+	d[3] = t.Minute() / 10
+	d[4] = t.Minute() % 10
+	d[5] = 10
+	d[6] = t.Second() / 10
+	d[7] = t.Second() % 10
 }
 
 func main() {
-	SRC := "?"
-
 	for {
-		currentTime := time.Now()
-		digits[0] = currentTime.Hour() / 10
-		digits[1] = currentTime.Hour() % 10
-		digits[2] = 10
-		digits[3] = currentTime.Minute() / 10
-		digits[4] = currentTime.Minute() % 10
-		digits[5] = 10
-		digits[6] = currentTime.Second() / 10
-		digits[7] = currentTime.Second() % 10
-
-		x := 0
-		y := 0
-		for i := 0; i < len(SRC) && y < 3; i++ {
-			switch SRC[i] {
-			case 63:
-				for j := 0; j < len(SRC); j++ {
-					switch SRC[j] {
+		gd()
+		x = 0
+		y = 0
+		for so := 0; so < len(s); so++ {
+			if s[so] == 63 {
+				for si := 0; si < len(s); si++ {
+					switch s[si] {
 					case '\n':
-					case '\\':
+						p('\\')
+						p('n')
+						p('"')
+						p('\n')
+						p('"')
 					case '"':
-						pixel('\\', x, y, digits)
-						x += 1
-						fallthrough
+						p('\\')
+						p('"')
+					case '\\':
+						p('\\')
+						p('\\')
 					default:
-						pixel(SRC[j], x, y, digits)
-						x += 1
+						p(s[si])
 					}
 				}
-			case '\n':
-				y += 1
-				x = 0
-				pixel('\n', x, y, digits)
-			default:
-				pixel(SRC[i], x, y, digits)
-				x += 1
+			} else {
+				p(s[so])
 			}
-
 		}
-		fmt.Printf("\033[%dA\033[%dD", y, x)
+		fmt.Printf("\n\033[%dA\033[%dD", y+1, x)
 		time.Sleep(1 * time.Second)
 	}
 }
