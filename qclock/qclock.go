@@ -6,17 +6,16 @@ import (
 	"time"
 )
 
-//go:embed qlock-formatted.txt
+//go:embed qlock_formatted.t
 var s string
-
 var x, y, i, dx int
-var f = []int{31599, 19812, 14479, 31207, 23524, 29411, 29679, 30866, 31727, 31719, 1040}
 var d [8]int
+var f = []int{31599, 19812, 14479, 31207, 23524, 29411, 29679, 30866, 31727, 31719, 1040}
 
 func p(ch byte) {
 	i = x / 2 / (3 + 2)
 	dx = x / 2 % (3 + 2)
-	if i < 8 && (y-4)/2 < 5 && dx < 3 && (f[d[i]]>>((5-(y-4)/2-1)*3+dx))&1 == 1 {
+	if i < 8 && y/2 < 5 && dx < 3 && (f[d[i]]>>((5-y/2-1)*3+dx))&1 == 1 {
 		fmt.Printf("\033[1;41;30m%c\033[0m", ch)
 	} else {
 		fmt.Printf("%c", ch)
@@ -30,6 +29,8 @@ func p(ch byte) {
 }
 
 func gd() {
+	x = 0
+	y = 0
 	t := time.Now()
 	d[0] = t.Hour() / 10
 	d[1] = t.Hour() % 10
@@ -42,10 +43,7 @@ func gd() {
 }
 
 func main() {
-	for {
-		gd()
-		x = 0
-		y = 0
+	for gd(); ; gd() {
 		for so := 0; so < len(s); so++ {
 			if s[so] == 63 {
 				for si := 0; si < len(s); si++ {
